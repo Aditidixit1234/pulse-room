@@ -20,6 +20,7 @@ class Room(Base):
     members = relationship("RoomMember", back_populates="room")
     tasks = relationship("Task", back_populates="room")
     messages = relationship("Message", back_populates="room")
+    notes = relationship("Note", back_populates="room")
 
     @property
     def initials(self):

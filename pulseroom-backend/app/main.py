@@ -4,7 +4,7 @@ import socketio
 from app.core.config import settings
 from app.db.database import create_tables
 from app.websocket.manager import sio
-from app.api.routes import auth, rooms, tasks, members, notifications, messages
+from app.api.routes import auth, rooms, tasks, members, notifications, messages, notes, activity, search, analytics
 
 app = FastAPI(
     title="PulseRoom API",
@@ -26,6 +26,10 @@ app.include_router(tasks.router)
 app.include_router(members.router)
 app.include_router(notifications.router)
 app.include_router(messages.router)
+app.include_router(notes.router)
+app.include_router(activity.router)
+app.include_router(search.router)
+app.include_router(analytics.router)
 
 socket_app = socketio.ASGIApp(sio, app)
 

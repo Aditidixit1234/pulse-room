@@ -1,1 +1,1 @@
-from app.api.routes import auth, rooms, tasks, members, notifications, messages
+from app.api.routes import auth, rooms, tasks, members, notifications, messages, notes, activity, search, analytics
