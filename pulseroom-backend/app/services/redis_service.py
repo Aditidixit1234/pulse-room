@@ -1,4 +1,5 @@
 import redis.asyncio as aioredis
+import json
 from app.core.config import settings
 
 redis_client = None
@@ -15,7 +16,6 @@ async def get_redis():
 
 async def set_user_online(user_id: str, room_id: str, data: dict):
     r = await get_redis()
-    import json
     await r.hset(f"presence:{room_id}", user_id, json.dumps(data))
     await r.expire(f"presence:{room_id}", 3600)
 
@@ -25,7 +25,6 @@ async def set_user_offline(user_id: str, room_id: str):
 
 async def get_room_presence(room_id: str) -> list:
     r = await get_redis()
-    import json
     data = await r.hgetall(f"presence:{room_id}")
     return [json.loads(v) for v in data.values()]
 
@@ -37,6 +36,12 @@ async def cache_get(key: str):
     r = await get_redis()
     return await r.get(key)
 
-async def publish_event(channel: str, message: str):
+async def publish_event(channel: str, data: dict):
     r = await get_redis()
-    await r.publish(channel, message)
+    await r.publish(channel, json.dumps(data))
+
+async def subscribe_to_channel(channel: str):
+    r = await get_redis()
+    pubsub = r.pubsub()
+    await pubsub.subscribe(channel)
+    return pubsub

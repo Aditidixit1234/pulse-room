@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
+import asyncio
 from app.core.config import settings
 from app.db.database import create_tables
-from app.websocket.manager import sio
+from app.websocket.manager import sio, start_redis_listener
 from app.api.routes import auth, rooms, tasks, members, notifications, messages, notes, activity, search, analytics
 
 app = FastAPI(
@@ -36,6 +37,8 @@ socket_app = socketio.ASGIApp(sio, app)
 @app.on_event("startup")
 async def startup():
     create_tables()
+    # Start Redis pub/sub listener
+    asyncio.create_task(start_redis_listener())
     print("PulseRoom backend started!")
 
 @app.get("/")
