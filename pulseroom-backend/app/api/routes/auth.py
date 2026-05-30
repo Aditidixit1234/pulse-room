@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+import bcrypt
 from app.db.database import get_db
 from app.db.models.user import User
 from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, UserResponse
@@ -7,6 +8,7 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.core.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 @router.post("/signup", response_model=TokenResponse)
 def signup(data: SignupRequest, db: Session = Depends(get_db)):
@@ -32,9 +34,10 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "initials": user.initials,
             "role": "owner",
-            "created_at": user.created_at
+            "created_at": user.created_at,
         }
     }
+
 
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
@@ -51,9 +54,10 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "initials": user.initials,
             "role": "owner",
-            "created_at": user.created_at
+            "created_at": user.created_at,
         }
     }
+
 
 @router.get("/me", response_model=UserResponse)
 def me(current_user: User = Depends(get_current_user)):
@@ -63,13 +67,12 @@ def me(current_user: User = Depends(get_current_user)):
         "email": current_user.email,
         "initials": current_user.initials,
         "role": "owner",
-        "created_at": current_user.created_at
+        "created_at": current_user.created_at,
     }
-    @router.post("/google-firebase")
-def google_firebase_login(
-    data: dict,
-    db: Session = Depends(get_db)
-):
+
+
+@router.post("/google-firebase")
+def google_firebase_login(data: dict, db: Session = Depends(get_db)):
     email = data.get("email")
     name = data.get("name")
     image = data.get("image")
@@ -77,10 +80,8 @@ def google_firebase_login(
     if not email:
         raise HTTPException(status_code=400, detail="Email required")
 
-    # Find or create user
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        import bcrypt
         user = User(
             name=name or email.split('@')[0],
             email=email,
