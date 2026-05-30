@@ -65,3 +65,41 @@ def me(current_user: User = Depends(get_current_user)):
         "role": "owner",
         "created_at": current_user.created_at
     }
+    @router.post("/google-firebase")
+def google_firebase_login(
+    data: dict,
+    db: Session = Depends(get_db)
+):
+    email = data.get("email")
+    name = data.get("name")
+    image = data.get("image")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+
+    # Find or create user
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        import bcrypt
+        user = User(
+            name=name or email.split('@')[0],
+            email=email,
+            hashed_password=bcrypt.hashpw(b"google-oauth", bcrypt.gensalt()).decode(),
+            image=image,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    token = create_access_token({"sub": str(user.id)})
+    return {
+        "token": token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "initials": user.initials,
+            "role": "owner",
+            "created_at": user.created_at,
+        }
+    }
